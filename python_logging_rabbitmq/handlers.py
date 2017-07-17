@@ -12,7 +12,7 @@ class RabbitMQHandler(logging.Handler):
     Inspired by: https://github.com/ziXiong/MQHandler
     """
 
-    def __init__(self, level=logging.NOTSET, formatter=JSONFormatter(),
+    def __init__(self, level=logging.NOTSET, formatter=JSONFormatter(), url=None,
                  host='localhost', port=5672, connection_params=None,
                  username=None, password=None,
                  exchange='log', declare_exchange=False,
@@ -39,6 +39,7 @@ class RabbitMQHandler(logging.Handler):
         super(RabbitMQHandler, self).__init__(level=level)
 
         # Important instances/properties.
+        self.url = url
         self.exchange = exchange
         self.connection = None
         self.channel = None
@@ -82,7 +83,10 @@ class RabbitMQHandler(logging.Handler):
         rabbitmq_logger.setLevel(logging.WARNING)
 
         if not self.connection or self.connection.is_closed:
-            self.connection = pika.BlockingConnection(pika.ConnectionParameters(**self.connection_params))
+            if self.url is None:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(**self.connection_params))
+            else:
+                self.connection = pika.BlockingConnection(pika.URLParameters(self.url))
 
         if not self.channel or self.channel.is_closed:
             self.channel = self.connection.channel()
