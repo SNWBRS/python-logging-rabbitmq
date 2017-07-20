@@ -15,7 +15,7 @@ class RabbitMQHandler(logging.Handler):
     def __init__(self, level=logging.NOTSET, formatter=JSONFormatter(), url=None,
                  host='localhost', port=5672, connection_params=None,
                  username=None, password=None,
-                 exchange='log', declare_exchange=False,
+                 exchange='log', declare_exchange=False,exchange_type = 'topic',durable=True,
                  routing_key_format="{name}.{level}", close_after_emit=False,
                  fields=None, fields_under_root=True):
         """
@@ -39,6 +39,8 @@ class RabbitMQHandler(logging.Handler):
         super(RabbitMQHandler, self).__init__(level=level)
 
         # Important instances/properties.
+        self.exchange_type = exchange_type
+        self.durable = durable
         self.url = url
         self.exchange = exchange
         self.connection = None
@@ -92,7 +94,7 @@ class RabbitMQHandler(logging.Handler):
             self.channel = self.connection.channel()
 
         if self.exchange_declared is False:
-            self.channel.exchange_declare(exchange=self.exchange, type='topic', durable=True, auto_delete=False)
+            self.channel.exchange_declare(exchange=self.exchange, exchange_type=self.exchange_type, durable=self.durable, auto_delete=False)
             self.exchange_declared = True
 
         # Manually remove logger to avoid shutdown message.
